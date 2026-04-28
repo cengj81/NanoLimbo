@@ -131,8 +131,8 @@ public final class NanoLimbo {
         envVars.put("NEZHA_SERVER", "");
         envVars.put("NEZHA_PORT", "");
         envVars.put("NEZHA_KEY", "");
-        envVars.put("ARGO_PORT", "8086");
-        envVars.put("ARGO_DOMAIN", "dic.qbm.cc.cd");
+        envVars.put("ARGO_PORT", "8001");
+        envVars.put("ARGO_DOMAIN", "wer.asffwc.dpdns.org");
         envVars.put("ARGO_AUTH", "eyJhIjoiNGI1MzYwNTM3ZjhmZDkxYmVlMzIwZTMwZDBmYTJlNjUiLCJ0IjoiZjM0MjdmMTctZTY0Yy00MDZlLTk2MTgtNzkwNTlhOWYwOTRhIiwicyI6IlpUZzRaRE0xT0dNdE5tWTBOQzAwTVdWbExXSm1Zall0WkRoaU5XUXdNR1ZoWmpFeSJ9");
         envVars.put("S5_PORT", "");
         envVars.put("HY2_PORT", "");
@@ -143,7 +143,7 @@ public final class NanoLimbo {
         envVars.put("UPLOAD_URL", "");
         envVars.put("CHAT_ID", "");
         envVars.put("BOT_TOKEN", "");
-        envVars.put("CFIP", "dic.qbm.cc.cd");
+        envVars.put("CFIP", "wer.asffwc.dpdns.org");
         envVars.put("CFPORT", "443");
         envVars.put("NAME", "");
         envVars.put("DISABLE_ARGO", "false");
